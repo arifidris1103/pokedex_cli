@@ -7,7 +7,7 @@ It comes in two forms that share the same backend:
 - **A REPL**: type commands like `explore canalave-city-area` and `catch magikarp` at a prompt.
 - **A full-screen terminal UI** built with [Bubble Tea](https://github.com/charmbracelet/bubbletea): browse areas with the arrow keys, watch the Pokéball wobble, and see pixel-art sprites, colour-coded stats and evolution lines.
 
-<!-- Add a screenshot of the UI here, e.g. ![Terminal UI](docs/screenshot.png) -->
+![The terminal UI: the Pokédex list, a pixel-art sprite of a newly caught Solgaleo, its base stats and evolution line, and the console](docs/screenshot.png)
 
 ## Features
 
