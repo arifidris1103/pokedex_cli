@@ -1,0 +1,10 @@
+# build outputs
+/pokedex_cli
+/pokedex-tui
+/pokedex-tui-demo
+/command_line_interfeces
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
