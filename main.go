@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/arifidris1103/pokedex_cli/internal/pokeapi"
@@ -15,9 +17,13 @@ type config struct {
 }
 
 func main() {
+	dex, err := pokedex.OpenDefault()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "warning:", err)
+	}
 	cfg := config{
 		pokeapiClient: pokeapi.NewClient(time.Hour),
-		pokedex:       pokedex.New(),
+		pokedex:       dex,
 	}
 	startRepl(&cfg)
 }

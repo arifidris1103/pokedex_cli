@@ -24,8 +24,7 @@ func callbackCatch(cfg *config, args ...string) error {
 		return nil
 	}
 
-	cfg.pokedex.Add(pokemon)
 	fmt.Printf("%s was caught!\n", pokemon.Name)
 	fmt.Println("You may now inspect it with the inspect command.")
-	return nil
+	return cfg.pokedex.Add(pokemon) // saves your Pokedex; reports if that fails
 }

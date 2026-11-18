@@ -17,7 +17,12 @@ import (
 
 func main() {
 	client := pokeapi.NewClient(time.Hour)
-	if _, err := tea.NewProgram(ui.New(newBackend(&client, pokedex.New()))).Run(); err != nil {
+	dex, err := pokedex.OpenDefault()
+	if err != nil {
+		// Shown after you quit; the UI covers the screen while it runs.
+		defer fmt.Fprintln(os.Stderr, "warning:", err)
+	}
+	if _, err := tea.NewProgram(ui.New(newBackend(&client, dex))).Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

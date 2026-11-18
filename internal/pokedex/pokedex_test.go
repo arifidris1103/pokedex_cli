@@ -1,6 +1,9 @@
 package pokedex
 
 import (
+	"os"
+	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/arifidris1103/pokedex_cli/internal/pokeapi"
@@ -67,4 +70,77 @@ func names(ps []pokeapi.Pokemon) []string {
 		out[i] = p.Name
 	}
 	return out
+}
+
+func TestSaveAndReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "pokedex.json")
+
+	d, err := Open(path) // no file yet: starts empty
+	if err != nil || len(d.All()) != 0 {
+		t.Fatalf("new Pokedex: %v, %d caught", err, len(d.All()))
+	}
+	if err := d.Add(pokeapi.Pokemon{ID: 25, Name: "pikachu", BaseExperience: 112}); err != nil {
+		t.Fatal(err)
+	}
+
+	again, err := Open(path) // like restarting the program
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, ok := again.Get("pikachu")
+	if !ok || p.ID != 25 || p.BaseExperience != 112 {
+		t.Fatalf("pikachu after reopening: %+v, %v", p, ok)
+	}
+}
+
+// The REPL and the UI open at the same time must not erase each other's catches.
+func TestTwoProgramsAtOnce(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "pokedex.json")
+	repl, _ := Open(path)
+	tui, _ := Open(path)
+
+	if err := repl.Add(pokeapi.Pokemon{ID: 129, Name: "magikarp"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := tui.Add(pokeapi.Pokemon{ID: 120, Name: "staryu"}); err != nil {
+		t.Fatal(err)
+	}
+
+	d, _ := Open(path)
+	if got := names(d.All()); !slices.Equal(got, []string{"staryu", "magikarp"}) {
+		t.Fatalf("saved file has %v", got)
+	}
+}
+
+func TestCorruptFileIsNotOverwritten(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "pokedex.json")
+	os.WriteFile(path, []byte("{not json"), 0o644)
+
+	if _, err := Open(path); err == nil {
+		t.Fatal("expected an error for a corrupt file")
+	}
+	t.Setenv("POKEDEX_FILE", path)
+	d, err := OpenDefault()
+	if err == nil {
+		t.Fatal("OpenDefault should report the corrupt file")
+	}
+	d.Add(pokeapi.Pokemon{ID: 1, Name: "bulbasaur"}) // memory only
+	if data, _ := os.ReadFile(path); string(data) != "{not json" {
+		t.Fatalf("corrupt file was overwritten: %q", data)
+	}
+	if _, ok := d.Get("bulbasaur"); !ok {
+		t.Fatal("catching should still work for this session")
+	}
+}
+
+func TestDefaultPath(t *testing.T) {
+	t.Setenv("POKEDEX_FILE", "/tmp/custom.json")
+	if p, _ := DefaultPath(); p != "/tmp/custom.json" {
+		t.Fatalf("got %q", p)
+	}
+	t.Setenv("POKEDEX_FILE", "")
+	home, _ := os.UserHomeDir()
+	if p, _ := DefaultPath(); p != filepath.Join(home, ".pokedex.json") {
+		t.Fatalf("got %q", p)
+	}
 }

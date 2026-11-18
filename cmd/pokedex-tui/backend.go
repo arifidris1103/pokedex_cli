@@ -69,7 +69,9 @@ func (b *backend) Catch(name string) (bool, error) {
 	if !pokedex.Roll(p.BaseExperience) {
 		return false, nil
 	}
-	b.dex.Add(p)
+	if err := b.dex.Add(p); err != nil {
+		return true, fmt.Errorf("caught %s, but %w", name, err)
+	}
 	return true, nil
 }
 
